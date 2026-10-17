@@ -398,25 +398,14 @@ def api_clip():
 
 @app.get("/api/stream")
 def api_stream():
-    """Prefer a presigned playback URL; fall back to same-origin proxy path."""
+    """Always return a same-origin proxy URL.
+
+    Presigned VSS/S3 URLs are internal HTTP hosts that break in the browser
+    (mixed content / unreachable from the workshop app origin).
+    """
     source = request.args.get("source") or ""
     if not source:
         return jsonify({"error": "source required"}), 400
-    token = login()
-    # Try VSS playback-url (presigned S3) — often works in the browser when CORS allows.
-    try:
-        r = requests.get(
-            f"{vss_base()}/api/v1/videos/playback-url",
-            params={"source": source, "token": token, "expires_in": 3600},
-            timeout=30,
-        )
-        if r.ok:
-            data = r.json() if r.content else {}
-            signed = data.get("url") or data.get("playback_url") or data.get("presigned_url")
-            if signed:
-                return jsonify({"playback_url": signed, "source": source, "mode": "presigned"})
-    except requests.RequestException:
-        pass
     return jsonify(
         {
             "playback_url": f"/api/playback?source={quote(source, safe='')}",
@@ -468,11 +457,13 @@ def api_playback():
         finally:
             upstream_resp.close()
 
+    # Force a playable media type — upstream sometimes returns octet-stream.
+    out_headers["Content-Type"] = "video/mp4"
     return Response(
         generate(),
         status=upstream_resp.status_code,
         headers=out_headers,
-        mimetype=upstream_resp.headers.get("Content-Type", "video/mp4"),
+        mimetype="video/mp4",
         direct_passthrough=True,
     )
 

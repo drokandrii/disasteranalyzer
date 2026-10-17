@@ -184,8 +184,11 @@ h1 {
 .live-stage.is-playing .live-thumb,
 .live-stage.is-playing .live-play { display: none; }
 .live-stage.is-ready:not(.is-playing) video {
-  opacity: 0;
+  /* Keep first frame visible under the play CTA when no poster image */
   pointer-events: none;
+}
+.live-stage.has-thumb:not(.is-playing) video {
+  opacity: 0;
   position: absolute;
   inset: 0;
   width: 100%;

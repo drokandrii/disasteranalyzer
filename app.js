@@ -307,7 +307,7 @@
     const thumb = $("#liveThumb");
     const playBtn = $("#livePlayBtn");
     const video = $("#liveVideo");
-    stage?.classList.remove("is-playing", "is-ready");
+    stage?.classList.remove("is-playing", "is-ready", "has-thumb");
     if (thumb) {
       thumb.hidden = true;
       thumb.removeAttribute("src");
@@ -398,10 +398,14 @@
         thumb.src = poster;
         thumb.hidden = false;
         video.poster = poster;
+        stage?.classList.add("has-thumb");
       }
       stage?.classList.add("is-ready");
       if (playBtn) playBtn.hidden = false;
-      sub.textContent = "Thumbnail ready — press play to watch live feed";
+      const fname = window.__FOCAL_NAME__ || "20261017_130940_210de363.mp4";
+      sub.textContent = poster
+        ? `Thumbnail ready for ${fname} — press play to watch`
+        : `Preview loaded for ${fname} — press play to watch`;
       $("#replayLive").hidden = false;
       if (autoplay) startLivePlayback();
     } catch (e) {
@@ -416,7 +420,8 @@
     const sub = $("#liveSub");
     if (!video || !liveReadyUrl) return;
     stage?.classList.add("is-playing");
-    if (!video.src) video.src = liveReadyUrl;
+    video.src = liveReadyUrl;
+    video.load();
     const p = video.play();
     if (p && typeof p.catch === "function") {
       p.catch((err) => {
@@ -424,7 +429,8 @@
         toast(err?.message || "Playback blocked — press play on the video controls", true);
       });
     }
-    if (sub) sub.textContent = "Live feed playing — use controls to pause or seek";
+    const fname = window.__FOCAL_NAME__ || "20261017_130940_210de363.mp4";
+    if (sub) sub.textContent = `Playing ${fname} — use controls to pause or seek`;
   }
 
   function wireLiveFootage(f) {
@@ -475,7 +481,8 @@
       }
       const segs = f.total_segments || f.timeline_len || "?";
       const name = f.filename || "20261017_130940_210de363.mp4";
-      el.textContent = `${segs} segments indexed · ${name}`;
+      window.__FOCAL_NAME__ = name;
+      el.textContent = `${segs} segments indexed · ready for mission search`;
       if (dot) {
         dot.classList.add("ok");
         dot.title = "Indexed";
