@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AidSight — Disaster Response & Humanitarian Logistics Analyzer</title>
+  <script>
+    window.__APP_BASE__ = (function () {
+      var p = location.pathname || "/";
+      var i = p.indexOf("/app");
+      if (i >= 0) return p.slice(0, i + 4).replace(/\/$/, "") || "/app";
+      return "";
+    })();
+    document.write('<base href="' + window.__APP_BASE__ + '/" />');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/app.css" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <header class="top">
+    <div class="brand-block">
+      <p class="brand">AidSight Logistics</p>
+      <h1>Disaster Response &amp; Humanitarian Logistics Analyzer</h1>
+      <p class="lede">Aerial wildfire assessment — supply-route access, smoke urgency, and emergency response on a rural corridor.</p>
+    </div>
+    <div class="footage-chip" id="footageMeta">
+      <div class="chip-head">
+        <span class="label">Ground footage</span>
+        <span class="status-dot" id="focalDot" title="Resolving index…"></span>
+      </div>
+      <code>20261017_130940_210de363.mp4</code>
+      <span class="meta" id="focalStats">Connecting to index…</span>
+      <p class="footage-brief" id="footageBrief">Aerial rural corridor with wildfire smoke, road traffic, and fire response.</p>
+      <div class="signal-row" id="signalRow" hidden>
+        <span class="signal" data-s="yolo">YOLO</span>
+        <span class="signal" data-s="cosmos">Cosmos Reason</span>
+        <span class="signal" data-s="search">Hybrid search</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="live-footage" id="liveFootage" aria-label="Live ground footage in use">
+    <div class="live-frame">
+      <div class="live-overlay">
+        <span class="live-pill"><span class="live-blink" aria-hidden="true"></span> Live feed</span>
+        <span class="live-file">20261017_130940_210de363.mp4</span>
+      </div>
+      <div class="live-stage" id="liveStage">
+        <img id="liveThumb" class="live-thumb" alt="Aerial wildfire corridor thumbnail" hidden />
+        <video id="liveVideo" controls playsinline preload="metadata"></video>
+        <button type="button" class="live-play" id="livePlayBtn" hidden aria-label="Play live footage">
+          <span class="live-play-icon" aria-hidden="true"></span>
+          <span>Press play</span>
+        </button>
+      </div>
+      <div class="live-caption">
+        <div>
+          <p class="live-title">Aerial asset in use</p>
+          <p class="live-sub" id="liveSub">Loading thumbnail…</p>
+        </div>
+        <div class="live-controls">
+          <button type="button" class="secondary" id="replayLive" hidden>Reload segment</button>
+          <label class="seg-jump" for="segSelect" hidden id="segJumpWrap">
+            Segment
+            <select id="segSelect"></select>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero-search">
+    <form id="searchForm" class="search-row" role="search">
+      <label class="sr-only" for="searchInput">Logistics search</label>
+      <input id="searchInput" type="search" placeholder="Find wildfire smoke, fire trucks, convoy traffic…" autocomplete="off" />
+      <button type="submit" id="searchBtn">
+        <span class="btn-label">Search</span>
+        <span class="btn-spin" hidden aria-hidden="true"></span>
+      </button>
+    </form>
+    <div class="chips" id="chips" role="group" aria-label="Suggested logistics queries">
+      <button type="button" class="chip" data-q="wildfire smoke near the road">smoke near road</button>
+      <button type="button" class="chip" data-q="fire truck at the blaze">fire truck</button>
+      <button type="button" class="chip" data-q="vehicles convoy on rural road">vehicle convoy</button>
+      <button type="button" class="chip" data-q="emergency personnel near fire">emergency personnel</button>
+      <button type="button" class="chip" data-q="person on dirt road near smoke">person near smoke</button>
+      <button type="button" class="chip" data-q="charred burn scar landscape">burn scar</button>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Mission views">
+    <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="results">Search</button>
+    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="ops">Ops Board</button>
+    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="ask">Ask</button>
+    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="brief">Mission Brief</button>
+  </nav>
+
+  <main>
+    <section id="panel-results" class="panel active" role="tabpanel">
+      <div class="panel-toolbar">
+        <p class="panel-title" id="resultsTitle">Search results</p>
+        <span class="badge" id="resultsBadge" hidden>0</span>
+      </div>
+      <div class="layout">
+        <div class="results" id="resultsList">
+          <div class="empty-state">
+            <p class="empty-title">Query this aerial wildfire footage</p>
+            <p class="empty">Pick a chip above or type a logistics need — results stay locked to <strong>20261017_130940_210de363.mp4</strong>.</p>
+            <button type="button" class="secondary" id="tryDemo">Try “wildfire smoke near the road”</button>
+          </div>
+        </div>
+        <aside class="detail" id="detailPanel">
+          <div class="empty-state compact">
+            <p class="empty-title">Clip inspector</p>
+            <p class="empty">Select a hit to play the segment and inspect YOLO classes + Cosmos Reason caption.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="panel-ops" class="panel" role="tabpanel" hidden>
+      <div class="panel-toolbar">
+        <div>
+          <p class="panel-title">Ops Board</p>
+          <p class="panel-sub">Route access · fire response · people on the corridor</p>
+        </div>
+        <button type="button" id="loadOps" class="secondary">Refresh board</button>
+      </div>
+      <div class="ops-grid" id="opsGrid">
+        <div class="ops-col" data-col="supply_routes">
+          <div class="ops-head">
+            <span class="ops-icon" aria-hidden="true">↻</span>
+            <h2>Supply Routes</h2>
+          </div>
+          <p class="hint">Road · convoy · smoke near corridor</p>
+          <div class="ops-hits"><div class="skeleton-stack" aria-hidden="true"><div class="sk"></div><div class="sk"></div></div></div>
+        </div>
+        <div class="ops-col" data-col="fire_response">
+          <div class="ops-head">
+            <span class="ops-icon" aria-hidden="true">▣</span>
+            <h2>Fire Response</h2>
+          </div>
+          <p class="hint">Fire truck · blaze · emergency activity</p>
+          <div class="ops-hits"><div class="skeleton-stack" aria-hidden="true"><div class="sk"></div><div class="sk"></div></div></div>
+        </div>
+        <div class="ops-col" data-col="access_people">
+          <div class="ops-head">
+            <span class="ops-icon" aria-hidden="true">◎</span>
+            <h2>Access &amp; People</h2>
+          </div>
+          <p class="hint">Personnel · dirt road · civilian near smoke</p>
+          <div class="ops-hits"><div class="skeleton-stack" aria-hidden="true"><div class="sk"></div><div class="sk"></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-ask" class="panel" role="tabpanel" hidden>
+      <div class="panel-toolbar">
+        <div>
+          <p class="panel-title">Ask the archive</p>
+          <p class="panel-sub">Grounded answers with cited clips from this wildfire reel only</p>
+        </div>
+      </div>
+      <form id="askForm" class="search-row">
+        <label class="sr-only" for="askInput">Coordinator question</label>
+        <input id="askInput" type="search" placeholder="Where is the fire truck relative to the smoke plume?" autocomplete="off" />
+        <button type="submit">Ask</button>
+      </form>
+      <div class="ask-chips">
+        <button type="button" class="chip ghost" data-ask="Where is the densest smoke relative to the road?">smoke vs road?</button>
+        <button type="button" class="chip ghost" data-ask="Is there a fire truck or emergency response visible?">fire response?</button>
+        <button type="button" class="chip ghost" data-ask="Are vehicles still using the rural corridor near the blaze?">corridor traffic?</button>
+      </div>
+      <article class="answer-card" id="askAnswer">
+        <p class="empty">Ask a coordinator question scoped to this aerial footage.</p>
+      </article>
+      <div class="results" id="askEvidence"></div>
+    </section>
+
+    <section id="panel-brief" class="panel" role="tabpanel" hidden>
+      <div class="panel-toolbar">
+        <div>
+          <p class="panel-title">Mission brief</p>
+          <p class="panel-sub">Draft urgency, route status, and next look from wildfire evidence</p>
+        </div>
+      </div>
+      <form id="briefForm" class="search-row">
+        <label class="sr-only" for="briefInput">Brief focus</label>
+        <input id="briefInput" type="search" value="aerial wildfire logistics assessment" autocomplete="off" />
+        <button type="submit">Draft brief</button>
+      </form>
+      <article class="answer-card" id="briefOut">
+        <p class="empty">Generate a short mission brief from YOLO + Cosmos evidence on this file.</p>
+      </article>
+      <div class="results" id="briefEvidence"></div>
+    </section>
+  </main>
+
+  <footer>
+    <span>YOLO detections · Cosmos Reason captions · hybrid semantic search</span>
+    <span class="footer-sep">·</span>
+    <span>Locked to 20261017_130940_210de363.mp4</span>
+  </footer>
+  <script src="static/app.js"></script>
+</body>
+</html>
